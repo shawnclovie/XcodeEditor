@@ -64,69 +64,56 @@ static NSDictionary* DictionaryWithProjectNodeTypesAsStrings() {
     return _projectNodeTypesAsStrings;
 }
 
+@implementation XCMemberHelper
++ (XcodeMemberType)asMemberType:(NSObject *)value {
+	NSDictionary* nodeTypesToString = DictionaryWithProjectNodeTypesAsStrings();
+	return (XcodeMemberType) [nodeTypesToString[value] intValue];
+}
++ (BOOL)hasFileReferenceType:(NSObject *)value {
+	return [kPBXFileReference isEqual:value];
+}
++ (BOOL)hasFileReferenceOrReferenceProxyType:(NSObject *)value {
+	return [kPBXFileReference isEqual:value] || [kPBXReferenceProxy isEqual:value];
+}
++ (BOOL)hasReferenceProxyType:(NSObject *)value {
+	return [kPBXReferenceProxy isEqual:value];
+}
++ (BOOL)hasGroupType:(NSObject *)value {
+	return [kPBXGroup isEqual:value] || [kPBXVariantGroup isEqual:value];
+}
++ (BOOL)hasProjectType:(NSObject *)value {
+	return [kPBXProject isEqual:value];
+}
++ (BOOL)hasNativeTargetType:(NSObject *)value {
+	return [kPBXNativeTarget isEqual:value];
+}
++ (BOOL)hasBuildFileType:(NSObject *)value {
+	return [kPBXBuildFile isEqual:value];
+}
++ (BOOL)hasBuildConfigurationType:(NSObject *)value {
+	return [kXCBuildConfiguration isEqual:value];
+}
++ (BOOL)hasContainerItemProxyType:(NSObject *)value {
+	return [kPBXContainerItemProxy isEqual:value];
+}
++ (BOOL)hasResourcesBuildPhaseType:(NSObject *)value {
+	return [kPBXResourcesBuildPhase isEqual:value];
+}
++ (BOOL)hasShellScriptBuildPhase:(NSObject *)value {
+	return [kPBXShellScriptBuildPhase isEqual:value];
+}
++ (BOOL)hasSourcesOrFrameworksBuildPhaseType:(NSObject *)value {
+	return [kPBXSourcesBuildPhase isEqual:value] || [kPBXFrameworksBuildPhase isEqual:value];
+}
++ (BOOL)hasVersionedGroupType:(NSObject *)value {
+	return [kXCVersionGroup isEqual:value];
+}
+@end
+
 @implementation NSString (XcodeMemberTypeExtensions)
 
 + (NSString*)xce_stringFromMemberType:(XcodeMemberType)nodeType {
     NSDictionary* nodeTypesToString = DictionaryWithProjectNodeTypesAsStrings();
     return [[nodeTypesToString allKeysForObject:@(nodeType)] firstObject];
 }
-
-
-- (XcodeMemberType)xce_asMemberType {
-    NSDictionary* nodeTypesToString = DictionaryWithProjectNodeTypesAsStrings();
-    return (XcodeMemberType) [[nodeTypesToString objectForKey:self] intValue];
-}
-
-- (BOOL)xce_hasFileReferenceType {
-    return [self isEqualToString:kPBXFileReference];
-}
-
-- (BOOL)xce_hasFileReferenceOrReferenceProxyType {
-    return [self isEqualToString:kPBXFileReference] || [self isEqualToString:kPBXReferenceProxy];
-}
-
-- (BOOL)xce_hasReferenceProxyType {
-    return [self isEqualToString:kPBXReferenceProxy];
-}
-
-- (BOOL)xce_hasGroupType {
-    return [self isEqualToString:kPBXGroup] || [self isEqualToString:kPBXVariantGroup];
-}
-
-- (BOOL)xce_hasProjectType {
-    return [self isEqualToString:kPBXProject];
-}
-
-- (BOOL)xce_hasNativeTargetType {
-    return [self isEqualToString:kPBXNativeTarget];
-}
-
-- (BOOL)xce_hasBuildFileType {
-    return [self isEqualToString:kPBXBuildFile];
-}
-
-- (BOOL)xce_hasBuildConfigurationType {
-    return [self isEqualToString:kXCBuildConfiguration];
-}
-
-- (BOOL)xce_hasShellScriptBuildPhase {
-    return [self isEqualToString:kPBXShellScriptBuildPhase];
-}
-
-- (BOOL)xce_hasContainerItemProxyType {
-    return [self isEqualToString:kPBXContainerItemProxy];
-}
-
-- (BOOL)xce_hasResourcesBuildPhaseType {
-    return [self isEqualToString:kPBXResourcesBuildPhase];
-}
-
-- (BOOL)xce_hasSourcesOrFrameworksBuildPhaseType {
-    return [self isEqualToString:kPBXSourcesBuildPhase] || [self isEqualToString:kPBXFrameworksBuildPhase];
-}
-
-- (BOOL)xce_hasVersionedGroupType {
-    return [self isEqualToString:kXCVersionGroup];
-}
-
 @end

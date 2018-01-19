@@ -48,7 +48,7 @@
 {
     self = [super init];
     if (self) {
-        _name = [name stringByRemovingEmoji];
+        _name = [NSStringEmojiHelper stringByRemovingEmojiForString:name];
         
         _files =files!=nil?files:@[];
         _inputPaths = inputPaths!=nil?inputPaths:@[];

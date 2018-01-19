@@ -14,14 +14,15 @@
 typedef enum
 {
     SourceTreeSDKRoot,
+	SourceTreeProjectRoot,
     SourceTreeGroup
 } XcodeSourceTreeType;
 
-@interface NSString (XcodeSourceTreeTypeExtensions)
+@interface XcodeSourceTreeTypeHelper : NSObject
 
-+ (NSString*)xce_stringFromSourceTreeType:(XcodeSourceTreeType)nodeType;
++ (NSString*)stringFromSourceTreeType:(XcodeSourceTreeType)nodeType;
 
-- (XcodeSourceTreeType)xce_asSourceTreeType;
++ (XcodeSourceTreeType)asSourceTreeType:(NSString *)string;
 
 @end
 

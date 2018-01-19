@@ -33,25 +33,26 @@ typedef enum
     XCVersionGroupType
 } XcodeMemberType;
 
+@interface XCMemberHelper : NSObject
++ (XcodeMemberType)asMemberType:(NSObject *)value;
++ (BOOL)hasFileReferenceType:(NSObject *)value;
++ (BOOL)hasFileReferenceOrReferenceProxyType:(NSObject *)value;
++ (BOOL)hasReferenceProxyType:(NSObject *)value;
++ (BOOL)hasGroupType:(NSObject *)value;
++ (BOOL)hasProjectType:(NSObject *)value;
++ (BOOL)hasNativeTargetType:(NSObject *)value;
++ (BOOL)hasBuildFileType:(NSObject *)value;
++ (BOOL)hasBuildConfigurationType:(NSObject *)value;
++ (BOOL)hasContainerItemProxyType:(NSObject *)value;
++ (BOOL)hasResourcesBuildPhaseType:(NSObject *)value;
++ (BOOL)hasShellScriptBuildPhase:(NSObject *)value;
++ (BOOL)hasSourcesOrFrameworksBuildPhaseType:(NSObject *)value;
++ (BOOL)hasVersionedGroupType:(NSObject *)value;
+@end
+
 @interface NSString (XcodeMemberTypeExtensions)
 
 + (NSString*)xce_stringFromMemberType:(XcodeMemberType)nodeType;
-
-- (XcodeMemberType)xce_asMemberType;
-
-- (BOOL)xce_hasFileReferenceType;
-- (BOOL)xce_hasFileReferenceOrReferenceProxyType;
-- (BOOL)xce_hasReferenceProxyType;
-- (BOOL)xce_hasGroupType;
-- (BOOL)xce_hasProjectType;
-- (BOOL)xce_hasNativeTargetType;
-- (BOOL)xce_hasBuildFileType;
-- (BOOL)xce_hasBuildConfigurationType;
-- (BOOL)xce_hasContainerItemProxyType;
-- (BOOL)xce_hasResourcesBuildPhaseType;
-- (BOOL)xce_hasShellScriptBuildPhase;
-- (BOOL)xce_hasSourcesOrFrameworksBuildPhaseType;
-- (BOOL)xce_hasVersionedGroupType;
 
 @end
 

@@ -79,7 +79,7 @@
     NSMutableArray *results = [NSMutableArray array];
     NSDictionary *objects = [_subProject objects];
     [objects enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasProjectType]) {
+		if ([XCMemberHelper hasProjectType:obj[@"isa"]]) {
             NSString *productRefGroupKey = [obj valueForKey:@"productRefGroup"];
             NSDictionary *products = [objects valueForKey:productRefGroupKey];
             NSArray *children = [products valueForKey:@"children"];

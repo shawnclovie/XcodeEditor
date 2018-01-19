@@ -1,11 +1,9 @@
 #import <Foundation/Foundation.h>
 
-@interface NSString (RemoveEmoji)
+@interface NSStringEmojiHelper : NSObject
 
-- (BOOL)isIncludingEmoji;
++ (BOOL)isIncludingEmojiForString:(NSString *)string;
 
-- (instancetype)stringByRemovingEmoji;
-
-- (instancetype)removedEmojiString __attribute__((deprecated));
++ (NSString *)stringByRemovingEmojiForString:(NSString *)source;
 
 @end

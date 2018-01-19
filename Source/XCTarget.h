@@ -18,6 +18,7 @@
 @class XCBuildShellScript;
 @class XCBuildShellScriptDefinition;
 @protocol XCBuildFile;
+@protocol XcodeGroupMember;
 
 /**
 * Represents a target in an xcode project.
@@ -54,7 +55,7 @@
 
 - (NSArray<XCSourceFile*>*)resources;
 
-- (NSArray<id<XCBuildFile>>*)members;
+- (NSArray<id<XCBuildFile, XcodeGroupMember>>*)members;
 
 - (NSArray<XCBuildShellScript*>*)buildShellScripts;
 
@@ -66,13 +67,13 @@
 
 - (void)addMember:(id<XCBuildFile>)member;
 
-- (void)makeAndAddShellScript:(XCBuildShellScriptDefinition*)shellScript;
+- (void)makeAndAddShellScript:(XCBuildShellScriptDefinition*)shellScript atIndex:(NSInteger)index;
 
 - (void)removeShellScriptByName:(NSString*)name;
 
-- (void)removeMemberWithKey:(NSString*)key;
+- (NSArray<NSString *> *)removeMemberWithKey:(NSString*)key;
 
-- (void)removeMembersWithKeys:(NSArray<NSString*>*)keys;
+- (NSArray<NSString *> *)removeMembersWithKeys:(NSArray<NSString*>*)keys;
 
 - (void)removeResourceWithKey:(NSString*)key;
 

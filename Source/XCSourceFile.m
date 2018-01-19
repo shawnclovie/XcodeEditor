@@ -101,7 +101,7 @@
     if ([self canBecomeBuildFile] && _isBuildFile == nil) {
         _isBuildFile = @NO;
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+			if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
                     _isBuildFile = nil;
                     
@@ -115,32 +115,19 @@
 
 - (BOOL)canBecomeBuildFile
 {
-    return _type == SourceCodeObjC || _type == SourceCodeObjCPlusPlus || _type == SourceCodeCPlusPlus || _type == XibFile || _type == Framework || _type == ImageResourcePNG || _type == HTML || _type == Bundle || _type == Archive || _type == AssetCatalog || _type == SourceCodeSwift || _type == PropertyList || _type == LocalizableStrings;
+    return CanXcodeSourceFileTypeBeBuildFile(_type);
 }
 
 
-- (XcodeMemberType)buildPhase
-{
-    if (_type == SourceCodeObjC || _type == SourceCodeObjCPlusPlus || _type == SourceCodeCPlusPlus || _type == XibFile || _type == SourceCodeSwift) {
-        return PBXSourcesBuildPhaseType;
-    }
-    else if (_type == Framework) {
-        return PBXFrameworksBuildPhaseType;
-    }
-    else if (_type == ImageResourcePNG || _type == HTML || _type == Bundle || _type == AssetCatalog ||  _type == PropertyList || _type == LocalizableStrings) {
-        return PBXResourcesBuildPhaseType;
-    }
-    else if (_type == Archive) {
-        return PBXFrameworksBuildPhaseType;
-    }
-    return PBXNilType;
+- (XcodeMemberType)buildPhase {
+	return GetBuildPhaseForSourceType(_type);
 }
 
 - (NSString *)buildFileKey
 {
     if (_buildFileKey == nil) {
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+			if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
                     _buildFileKey = [key copy];
                 }
@@ -194,7 +181,7 @@
 {
     NSMutableDictionary *objectArrayCopy = [[_project objects] mutableCopy];
     [objectArrayCopy enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+		if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
             if ([obj[@"fileRef"] isEqualToString:self.key]) {
                 NSMutableDictionary *replaceBuildFile = [NSMutableDictionary dictionaryWithDictionary:obj];
                 NSDictionary *compilerFlagsDict = @{@"COMPILER_FLAGS" : value};
@@ -221,7 +208,7 @@
 {
     NSMutableDictionary *objectArrayCopy = [[_project objects] mutableCopy];
     [objectArrayCopy enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+		if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
             if ([obj[@"fileRef"] isEqualToString:self.key]) {
                 NSMutableDictionary *replaceBuildFile = [NSMutableDictionary dictionaryWithDictionary:obj];
                 if (![replaceBuildFile objectForKey:@"settings"]) {

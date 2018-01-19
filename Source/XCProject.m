@@ -68,14 +68,14 @@ NSString *const XCProjectNotFoundException;
     NSDictionary *obj = [[self objects] valueForKey:key];
     
     if (obj) {
-        NSString *groupIsa =[obj valueForKey:@"isa"];
-        if([groupIsa xce_hasFileReferenceOrReferenceProxyType]) {
+        NSString *groupIsa = obj[@"isa"];
+		if([XCMemberHelper hasFileReferenceOrReferenceProxyType:groupIsa]) {
             return [self fileWithKey:key];
         }
-        else if([groupIsa xce_hasVersionedGroupType]) {
+		else if([XCMemberHelper hasVersionedGroupType:groupIsa]) {
             return [self versionGroupWithKey:key];
         }
-        else if([groupIsa xce_hasGroupType]) {
+		else if([XCMemberHelper hasGroupType:groupIsa]) {
             return [self groupWithKey:key];
         }
     }
@@ -88,7 +88,7 @@ NSString *const XCProjectNotFoundException;
 {
     NSMutableArray *results = [NSMutableArray array];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasFileReferenceType]) {
+		if ([XCMemberHelper hasFileReferenceType:obj[@"isa"]]) {
             XcodeSourceFileType fileType = XCSourceFileTypeFromStringRepresentation(
                     [obj valueForKey:@"lastKnownFileType"] ?: [obj valueForKey:@"explicitFileType"]);
             NSString *path = [obj valueForKey:@"path"];
@@ -104,7 +104,7 @@ NSString *const XCProjectNotFoundException;
 - (XCSourceFile *)fileWithKey:(NSString *)key
 {
     NSDictionary *obj = [[self objects] valueForKey:key];
-    if (obj && [[obj valueForKey:@"isa"] xce_hasFileReferenceOrReferenceProxyType]) {
+	if (obj && [XCMemberHelper hasFileReferenceOrReferenceProxyType:obj[@"isa"]]) {
         XcodeSourceFileType fileType = XCSourceFileTypeFromStringRepresentation(
                 [obj valueForKey:@"lastKnownFileType"] ?: [obj valueForKey:@"explicitFileType"]);
 
@@ -129,6 +129,16 @@ NSString *const XCProjectNotFoundException;
         }
     }
     return nil;
+}
+
+- (NSArray<XCSourceFile *> *)filesWithName:(NSString *)name {
+	NSMutableArray<XCSourceFile *> *files = [NSMutableArray array];
+	for (XCSourceFile *file in self.files) {
+		if ([file.name isEqualToString:name]) {
+			[files addObject:file];
+		}
+	}
+	return files.copy;
 }
 
 - (NSArray *)headerFiles
@@ -172,7 +182,7 @@ NSString *const XCProjectNotFoundException;
 {
     NSMutableArray *results = [[NSMutableArray alloc] init];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasGroupType]) {
+		if ([XCMemberHelper hasGroupType:obj[@"isa"]]) {
             XCGroup *group = _groups[key];
             if (group == nil) {
                 group = [self createGroupWithDictionary:obj forKey:key];
@@ -233,7 +243,7 @@ NSString *const XCProjectNotFoundException;
     }
 
     NSDictionary *obj = [[self objects] objectForKey:key];
-    if (obj && [[obj valueForKey:@"isa"] xce_hasGroupType]) {
+	if (obj && [XCMemberHelper hasGroupType:obj[@"isa"]]) {
         XCGroup *group = [self createGroupWithDictionary:obj forKey:key];
         _groups[key] = group;
 
@@ -290,7 +300,7 @@ NSString *const XCProjectNotFoundException;
     for (NSString *pathItem in pathItems) {
         id <XcodeGroupMember> group = [currentGroup memberWithDisplayName:pathItem];
         if ([group isKindOfClass:[XCGroup class]]) {
-            currentGroup = group;
+            currentGroup = (XCGroup *)group;
         } else {
             return nil;
         }
@@ -305,7 +315,7 @@ NSString *const XCProjectNotFoundException;
                                alias:[dictionary valueForKey:@"name"]
                                 path:[dictionary valueForKey:@"path"]
                             children:[dictionary valueForKey:@"children"]
-            memberType:[[dictionary valueForKey:@"isa"] xce_asMemberType]];
+						  memberType:[XCMemberHelper asMemberType:dictionary[@"isa"]]];
 }
 
 //-------------------------------------------------------------------------------------------
@@ -317,7 +327,7 @@ NSString *const XCProjectNotFoundException;
     NSMutableArray* results = [[NSMutableArray alloc] init];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSDictionary* obj, BOOL* stop)
      {
-         if ([[obj valueForKey:@"isa"] xce_hasVersionedGroupType])
+		 if ([XCMemberHelper hasVersionedGroupType:obj[@"isa"]])
          {
              XCVersionGroup* group = _versionGroups[key];
              if (group == nil)
@@ -340,7 +350,7 @@ NSString *const XCProjectNotFoundException;
     }
     
     NSDictionary* obj = [[self objects] objectForKey:key];
-    if (obj && [[obj valueForKey:@"isa"] xce_hasVersionedGroupType])
+	if (obj && [XCMemberHelper hasVersionedGroupType:obj[@"isa"]])
     {
         XCVersionGroup* group = [self createVersionGroupWithDictionary:obj forKey:key];
         _versionGroups[key] = group;
@@ -378,7 +388,7 @@ NSString *const XCProjectNotFoundException;
     if (_targets == nil) {
         _targets = [[NSMutableArray alloc] init];
         [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasNativeTargetType]) {
+            if ([XCMemberHelper hasNativeTargetType:obj[@"isa"]]) {
                 XCTarget *target = [XCTarget targetWithProject:self key:key name:[obj valueForKey:@"name"]
                                                    productName:[obj valueForKey:@"productName"]
                                               productReference:[obj valueForKey:@"productReference"]
@@ -426,13 +436,14 @@ NSString *const XCProjectNotFoundException;
     return [destination dataUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (void)save
+- (void)saveForError:(NSError *__autoreleasing *)error
 {
     [_fileOperationQueue commitFileOperations];
 
-    NSData *data = [NSPropertyListSerialization dataWithPropertyList:_dataStore format:NSPropertyListXMLFormat_v1_0 options:0 error:NULL];
-    data = [self _fixEncodingInData:data];
-    [data writeToFile:[_filePath stringByAppendingPathComponent:@"project.pbxproj"] atomically:YES];
+    NSData *data = [NSPropertyListSerialization dataWithPropertyList:_dataStore format:NSPropertyListXMLFormat_v1_0 options:0 error:error];
+	data = [self _fixEncodingInData:data];
+	__auto_type path = [_filePath stringByAppendingPathComponent:@"project.pbxproj"];
+	[data writeToFile:path options:NSDataWritingAtomic error:error];
     
     // Don't forget to reset the cache so that we'll always get the latest data.
     [self dropCache];

@@ -180,8 +180,6 @@
 - (void)addFramework:(XCFrameworkDefinition *)frameworkDefinition
 {
     if (([self memberWithDisplayName:[frameworkDefinition fileName]]) == nil) {
-        NSLog(@"frame doesnt exists. creating %@", [frameworkDefinition fileName]);
-        NSLog(@"existing members: %@", [self members]);
         NSDictionary *fileReference;
         if ([frameworkDefinition copyToDestination]) {
             fileReference = [self makeFileReferenceWithPath:[frameworkDefinition fileName] name:nil type:Framework
@@ -631,7 +629,7 @@
 {
     if (_buildFileKey == nil) {
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+			if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
                     _buildFileKey = [key copy];
                 }
@@ -661,8 +659,8 @@
     if ([self canBecomeBuildFile] && _isBuildFile == nil) {
         _isBuildFile = @NO;
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
-                if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
+			if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
+                if ([_key isEqual:obj[@"fileRef"]]) {
                     _isBuildFile = nil;
 
                     _isBuildFile = @YES;
@@ -902,7 +900,7 @@
     if (path != nil) {
         reference[@"path"] = path;
     }
-    reference[@"sourceTree"] = [NSString xce_stringFromSourceTreeType:sourceTree];
+    reference[@"sourceTree"] = [XcodeSourceTreeTypeHelper stringFromSourceTreeType:sourceTree];
     return reference;
 }
 
@@ -931,7 +929,7 @@
 - (XcodeMemberType)typeForKey:(NSString *)key
 {
     NSDictionary *obj = [[_project objects] valueForKey:key];
-    return [[obj valueForKey:@"isa"] xce_asMemberType];
+	return [XCMemberHelper asMemberType:obj[@"isa"]];
 }
 
 - (void)addSourceFile:(XCSourceFile *)sourceFile toTargets:(NSArray *)targets

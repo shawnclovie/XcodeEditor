@@ -249,7 +249,7 @@
 {
     if (_buildFileKey == nil) {
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+            if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
                     _buildFileKey = [key copy];
                 }
@@ -277,7 +277,7 @@
     if (_isBuildFile == nil) {
         _isBuildFile = @NO;
         [[_project objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-            if ([[obj valueForKey:@"isa"] xce_hasBuildFileType]) {
+            if ([XCMemberHelper hasBuildFileType:obj[@"isa"]]) {
                 if ([[obj valueForKey:@"fileRef"] isEqualToString:_key]) {
                     _isBuildFile = nil;
                     
@@ -504,7 +504,7 @@
 - (XcodeMemberType)typeForKey:(NSString*)key
 {
     NSDictionary* obj = [[_project objects] valueForKey:key];
-    return [[obj valueForKey:@"isa"] xce_asMemberType];
+    return [XCMemberHelper asMemberType:obj[@"isa"]];
 }
 
 - (void)addSourceFile:(XCSourceFile*)sourceFile toTargets:(NSArray*)targets

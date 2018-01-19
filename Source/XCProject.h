@@ -76,6 +76,8 @@
 */
 - (XCSourceFile*)fileWithName:(NSString*)name;
 
+- (NSArray<XCSourceFile *> *)filesWithName:(NSString *)name;
+
 /**
 * Returns all header files in the project, as an array of `XCSourceFile` objects.
 */
@@ -209,7 +211,7 @@
 /**
 * Saves a project after editing.
 */
-- (void)save;
+- (void)saveForError:(NSError **)error;
 
 
 //-------------------------------------------------------------------------------------------

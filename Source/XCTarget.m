@@ -62,7 +62,7 @@
         for (NSString* buildPhaseKey in [[[_project objects] objectForKey:_key] objectForKey:@"buildPhases"])
         {
             NSDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-            if ([[buildPhase valueForKey:@"isa"] xce_hasResourcesBuildPhaseType])
+			if ([XCMemberHelper hasResourcesBuildPhaseType:buildPhase[@"isa"]])
             {
                 for (NSString* buildFileKey in [buildPhase objectForKey:@"files"])
                 {
@@ -104,58 +104,43 @@
     return [[self configurations] objectForKey:name];
 }
 
-- (NSArray*)members
-{
-    if (_members == nil)
-    {
+- (NSArray*)members {
+    if (_members == nil) {
         _members = [[NSMutableArray alloc] init];
-        for (NSString* buildPhaseKey in [[[_project objects] objectForKey:_key] objectForKey:@"buildPhases"])
-        {
-            NSDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-            if ([[buildPhase valueForKey:@"isa"] xce_hasSourcesOrFrameworksBuildPhaseType])
-            {
-                for (NSString* buildFileKey in [buildPhase objectForKey:@"files"])
-                {
-                    id<XCBuildFile,XcodeGroupMember> targetMember = [self buildFileWithKey:buildFileKey];
-                    if (targetMember)
-                    {
-                        [_members addObject:targetMember];
-                    }
-                }
-            }
+        for (NSString* buildPhaseKey in _project.objects[_key][@"buildPhases"]) {
+            NSDictionary* buildPhase = _project.objects[buildPhaseKey];
+			for (NSString* buildFileKey in [buildPhase objectForKey:@"files"]) {
+				__auto_type targetMember = [self buildFileWithKey:buildFileKey];
+				if (targetMember) {
+					[_members addObject:targetMember];
+				}
+			}
         }
     }
     return _members;
 }
 
-- (NSArray*)buildShellScripts
-{
-    if (_buildShellScripts == nil)
-    {
+- (NSArray*)buildShellScripts {
+    if (_buildShellScripts == nil) {
         _buildShellScripts = [[NSMutableArray alloc] init];
-        for (NSString* buildPhaseKey in [[[_project objects] objectForKey:_key] objectForKey:@"buildPhases"])
-        {
-            NSDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-            if ([[buildPhase valueForKey:@"isa"] xce_hasShellScriptBuildPhase])
-            {
-                
-                XCBuildShellScript* targetMember = [[XCBuildShellScript alloc]initWithProject:_project
-                                                                                          key:buildPhaseKey
-                                                                                         name:buildPhase[@"name"]
-                                                                                        files:buildPhase[@"files"]
-                                                                                   inputPaths:buildPhase[@"inputPaths"]
-                                                                                  outputPaths:buildPhase[@"outputPaths"]
-                                                           runOnlyForDeploymentPostprocessing:[buildPhase[@"runOnlyForDeploymentPostprocessing"] boolValue]
-                                                                                    shellPath:buildPhase[@"shellPath"]
-                                                                                  shellScript:buildPhase[@"shellScript"]];
-                if (targetMember)
-                {
-                    [_buildShellScripts addObject:targetMember];
-                }
+        for (NSString* buildPhaseKey in _project.objects[_key][@"buildPhases"]) {
+            NSDictionary* buildPhase = _project.objects[buildPhaseKey];
+			if (![XCMemberHelper hasShellScriptBuildPhase:buildPhase[@"isa"]]) {
+				continue;
             }
+			__auto_type member = [XCBuildShellScript.alloc
+								  initWithProject:_project
+								  key:buildPhaseKey
+								  name:buildPhase[@"name"]
+								  files:buildPhase[@"files"]
+								  inputPaths:buildPhase[@"inputPaths"]
+								  outputPaths:buildPhase[@"outputPaths"]
+								  runOnlyForDeploymentPostprocessing:[buildPhase[@"runOnlyForDeploymentPostprocessing"] boolValue]
+								  shellPath:buildPhase[@"shellPath"]
+								  shellScript:buildPhase[@"shellScript"]];
+			[_buildShellScripts addObject:member];
         }
     }
-    
     return _buildShellScripts;
 }
 
@@ -167,10 +152,9 @@
     for (NSString* buildPhaseKey in [target objectForKey:@"buildPhases"])
     {
         NSMutableDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-        if ([[buildPhase valueForKey:@"isa"] xce_asMemberType] == [member buildPhase])
+		if ([XCMemberHelper asMemberType:buildPhase[@"isa"]] == [member buildPhase])
         {
-            
-            NSMutableArray* files = [buildPhase objectForKey:@"files"];
+            NSMutableArray* files = buildPhase[@"files"];
             if (![files containsObject:[member buildFileKey]])
             {
                 [files addObject:[member buildFileKey]];
@@ -182,12 +166,9 @@
     [self flagMembersAsDirty];
 }
 
-- (void)makeAndAddShellScript:(XCBuildShellScriptDefinition *)shellScript
-{
-    NSDictionary* target = [[_project objects] objectForKey:_key];
-    
-    NSDictionary* reference = @{
-                                @"isa":[NSString xce_stringFromMemberType:PBXShellScriptBuildPhase],
+- (void)makeAndAddShellScript:(XCBuildShellScriptDefinition *)shellScript atIndex:(NSInteger)index {
+    NSDictionary* target = _project.objects[_key];
+    NSDictionary* reference = @{@"isa":[NSString xce_stringFromMemberType:PBXShellScriptBuildPhase],
                                 @"buildActionMask":@"2147483647",
                                 @"files":shellScript.files,
                                 @"inputPaths":shellScript.inputPaths,
@@ -196,27 +177,30 @@
                                 @"shellPath":shellScript.shellPath,
                                 @"shellScript":shellScript.shellScript,
                                 @"name":shellScript.name
-                                
                                 };
     NSString* fileKey = [[XCKeyBuilder forItemNamed:shellScript.name] build];
     [_project objects][fileKey] = reference;
     
-    NSMutableArray *buildPhases =[target objectForKey:@"buildPhases"];
-    [buildPhases addObject:fileKey];
+    NSMutableArray *buildPhases = target[@"buildPhases"];
+	if (index >= 0 && index < buildPhases.count) {
+		[buildPhases insertObject:fileKey atIndex:index];
+	} else {
+		[buildPhases addObject:fileKey];
+	}
     [target setValue:buildPhases forKey:@"buildPhases"];
     
     [self flagMembersAsDirty];
 }
 
 - (void)removeShellScriptByName:(NSString*)name {
-    NSDictionary* target = [[_project objects] objectForKey:_key];
+    NSDictionary* target = _project.objects[_key];
     NSMutableArray *removedPhases = [NSMutableArray array];
-    for (NSString* buildPhaseKey in [target objectForKey:@"buildPhases"])
+    for (NSString* buildPhaseKey in target[@"buildPhases"])
     {
-        NSMutableDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-        NSString* type = [buildPhase objectForKey:@"isa"];
-        if (type && [type xce_hasShellScriptBuildPhase]) {
-            NSString* currentName = [buildPhase objectForKey:@"name"];
+        NSMutableDictionary* buildPhase = _project.objects[buildPhaseKey];
+        NSString* type = buildPhase[@"isa"];
+		if (type && [XCMemberHelper hasShellScriptBuildPhase:type]) {
+            NSString* currentName = buildPhase[@"name"];
             if ([currentName isEqualToString:name]) {
                 [_project removeObjectWithKey:buildPhaseKey];
                 [removedPhases addObject:buildPhaseKey];
@@ -285,35 +269,40 @@
 }
 
 
-- (void)removeMemberWithKey:(NSString*)key
-{
-    
-    NSDictionary* buildRefWithFileRef = [self buildRefWithFileRefKey];
-    NSDictionary* target = [[_project objects] objectForKey:_key];
-    NSString* buildRef = [buildRefWithFileRef objectForKey:key];
-    
-    if (!buildRef)
-    {
-        return;
-    }
-    
-    for (NSString* buildPhaseKey in [target objectForKey:@"buildPhases"])
-    {
-        NSMutableDictionary* buildPhase = [[_project objects] objectForKey:buildPhaseKey];
-        NSMutableArray* files = [buildPhase objectForKey:@"files"];
-        
-        [files removeObjectIdenticalTo:buildRef];
-        [buildPhase setObject:files forKey:@"files"];
-    }
-    [self flagMembersAsDirty];
+- (NSArray<NSString *> *)removeMemberWithKey:(NSString*)key {
+	return [self removeMembersWithKeys:@[key]];
 }
 
-- (void)removeMembersWithKeys:(NSArray*)keys
-{
-    for (NSString* key in keys)
-    {
-        [self removeMemberWithKey:key];
+- (NSArray<NSString *> *)removeMembersWithKeys:(NSArray<NSString *> *)keys {
+	if (keys.count == 0) {
+		return nil;
+	}
+	__auto_type removedKeys = [NSMutableArray array];
+	NSDictionary* buildRefWithFileRef = [self buildRefWithFileRefKey];
+	NSDictionary* target = _project.objects[_key];
+	for (NSString* buildPhaseKey in target[@"buildPhases"]) {
+		NSMutableDictionary* buildPhase = _project.objects[buildPhaseKey];
+		NSMutableArray* files = buildPhase[@"files"];
+		__auto_type count = files.count;
+		if (count == 0) {
+			continue;
+		}
+		for (NSString* key in keys) {
+			NSString* buildRef = buildRefWithFileRef[key];
+			if (buildRef) {
+				[files removeObjectIdenticalTo:buildRef];
+				if (files.count != count) {
+					[removedKeys addObject:key];
+					count = files.count;
+				}
+			}
+		}
+		buildPhase[@"files"] = files;
     }
+	if (removedKeys.count > 0) {
+		[self flagMembersAsDirty];
+	}
+	return removedKeys;
 }
 
 - (void)addDependency:(NSString*)key
@@ -409,7 +398,7 @@
     NSDictionary* obj = [[_project objects] valueForKey:theKey];
     if (obj)
     {
-        if ([[obj valueForKey:@"isa"] xce_hasBuildFileType])
+		if ([XCMemberHelper hasBuildFileType:obj[@"isa"]])
         {
             id<XcodeGroupMember> targetFile = [_project groupMemberWithKey:[obj valueForKey:@"fileRef"]];
             if([targetFile conformsToProtocol:@protocol(XCBuildFile)])

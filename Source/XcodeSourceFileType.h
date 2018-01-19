@@ -10,6 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <Foundation/Foundation.h>
+#import "XcodeMemberType.h"
 
 typedef NS_OPTIONS(NSInteger, XcodeSourceFileType)
 {
@@ -17,7 +18,7 @@ typedef NS_OPTIONS(NSInteger, XcodeSourceFileType)
     Framework = 1,               // .framework
     PropertyList = 2,            // .plist
     SourceCodeHeader = 3,        // .h
-    SourceCodeObjC = 4,          // .m
+    SourceCodeObjC = 4,          // .m, .c
     SourceCodeObjCPlusPlus = 5,  // .mm
     SourceCodeCPlusPlus = 6,     // .cpp
     XibFile = 7,                 // .xib
@@ -38,7 +39,11 @@ typedef NS_OPTIONS(NSInteger, XcodeSourceFileType)
     Storyboard = 22,             // .storyboard (file.storyboard)
     XCConfig = 23,               // .xcconfig
     XCDataModel = 24,            // .xcdatamodel
-    LocalizableStrings = 25      // .strings
+    LocalizableStrings = 25,      // .strings
+	
+	XcodeSourceFileTypeJSON,
+	XcodeSourceFileTypeJavaScript,
+	XcodeSourceFileTypeBinaryFile,
 };
 
 NSString* NSStringFromXCSourceFileType(XcodeSourceFileType type);
@@ -47,3 +52,6 @@ XcodeSourceFileType XCSourceFileTypeFromStringRepresentation(NSString* string);
 
 XcodeSourceFileType XCSourceFileTypeFromFileName(NSString* fileName);
 
+BOOL CanXcodeSourceFileTypeBeBuildFile(XcodeSourceFileType type);
+
+XcodeMemberType GetBuildPhaseForSourceType(XcodeSourceFileType type);

@@ -31,7 +31,7 @@
 {
     __block NSString *result = nil;
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasReferenceProxyType]) {
+		if ([XCMemberHelper hasReferenceProxyType:obj[@"isa"]]) {
             NSString *candidate = [obj valueForKey:@"path"];
             if ([candidate isEqualToString:name]) {
                 result = key;
@@ -48,7 +48,7 @@
 {
     NSMutableArray *results = [[NSMutableArray alloc] init];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasReferenceProxyType]) {
+		if ([XCMemberHelper hasReferenceProxyType:obj[@"isa"]]) {
             // make sure it belongs to the xcodeproj we're adding
             NSString *remoteRef = [obj valueForKey:@"remoteRef"];
             NSDictionary *containerProxy = [[self objects] valueForKey:remoteRef];
@@ -91,7 +91,7 @@
 {
     __block NSMutableArray *returnValue = [[NSMutableArray alloc] init];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_asMemberType] == memberType) {
+        if ([XCMemberHelper asMemberType:obj[@"isa"]] == memberType) {
             if (memberType == PBXContainerItemProxyType) {
                 if ([[obj valueForKey:@"containerPortal"] isEqualToString:identifier]) {
                     [returnValue addObject:key];
@@ -166,7 +166,7 @@
 {
     NSMutableArray *results = [[NSMutableArray alloc] init];
     [[self objects] enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSDictionary *obj, BOOL *stop) {
-        if ([[obj valueForKey:@"isa"] xce_hasContainerItemProxyType]) {
+		if ([XCMemberHelper hasContainerItemProxyType:obj[@"isa"]]) {
             NSString *remoteInfo = [obj valueForKey:@"remoteInfo"];
             NSString *proxy = [obj valueForKey:@"proxyType"];
             if ([remoteInfo isEqualToString:name] && [proxy isEqualToString:proxyType]) {
